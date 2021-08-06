@@ -275,8 +275,8 @@ func processText(update goTelegram.Update) {
 	case "/cancel":
 		data := userList[update.Message.From.ID]
 		if data != nil {
-			delete(userList, update.Message.From.ID)
 			err = bot.DeleteMessage(data.Message)
+			delete(userList, update.Message.From.ID)
 			if err != nil {
 				log.Println("couldn't delete message on sign up\n", err)
 			}
@@ -285,10 +285,14 @@ func processText(update goTelegram.Update) {
 
 		reportData := reportList[update.Message.From.ID]
 		if reportData != nil {
+			err = bot.DeleteMessage(reportData.Update)
+			if err != nil {
+				log.Println("couldn't delete message on report ish 1\n", err)
+			}
 			delete(reportList, update.Message.From.ID)
 			err = bot.DeleteMessage(update.Message)
 			if err != nil {
-				log.Println("couldn't delete message on report ish\n", err)
+				log.Println("couldn't delete message on report ish 2\n", err)
 			}
 			mainMenu(update)
 		}
