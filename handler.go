@@ -79,6 +79,11 @@ func processText(update goTelegram.Update) {
 						if err != nil {
 							log.Println("Couldn't send registration message.\n", err)
 						}
+					} else {
+						_, err = bot.SendMessage("Registration Canceled", update.Message.Chat)
+						if err != nil {
+							log.Println("Couldn't send canceled registration message.\n", err)
+						}
 					}
 					err = bot.DeleteMessage(currentUserData.Message)
 					if err != nil {
@@ -247,7 +252,8 @@ func processText(update goTelegram.Update) {
 				UserID: update.Message.From.ID,
 			}
 
-			message, err := bot.SendMessage("Hi! Welcome!\nYou'd need to register to continue.\n\nWhat is your name?",
+			message, err := bot.SendMessage("Hi! Welcome!\nYou'd need to register to continue.\nEnter /cancel to " +
+				"Cancel.\n\nWhat is your name?",
 				update.Message.Chat)
 
 			newProcessing := userPendingData{
@@ -264,6 +270,26 @@ func processText(update goTelegram.Update) {
 				log.Println(err)
 			}
 		} else {
+			mainMenu(update)
+		}
+	case "/cancel":
+		data := userList[update.Message.From.ID]
+		if data != nil {
+			delete(userList, update.Message.From.ID)
+			err = bot.DeleteMessage(data.Message)
+			if err != nil {
+				log.Println("couldn't delete message on sign up\n", err)
+			}
+			return
+		}
+
+		reportData := reportList[update.Message.From.ID]
+		if reportData != nil {
+			delete(reportList, update.Message.From.ID)
+			err = bot.DeleteMessage(update.Message)
+			if err != nil {
+				log.Println("couldn't delete message on report ish\n", err)
+			}
 			mainMenu(update)
 		}
 	}
@@ -422,6 +448,12 @@ func processCallback(update goTelegram.Update) {
 		if err != nil {
 			log.Println("stage 1 of delete ish,\n", err)
 		}
+	case "bail":
+		currentReportData := reportList[update.CallbackQuery.From.ID]
+		if currentReportData != nil {
+			delete(reportList, update.CallbackQuery.From.ID)
+		}
+		mainMenu(update)
 	}
 }
 
