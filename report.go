@@ -76,6 +76,11 @@ func currentMonthTotaled(update goTelegram.Update) {
 			tempReport.ReturnVisit += r.ReturnVisit
 			tempReport.BibleStudy += r.BibleStudy
 		}
+
+		if tempReport.Minute > 60 {
+			tempReport.Hour += tempReport.Minute / 60
+			tempReport.Minute = tempReport.Minute % 60
+		}
 		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
@@ -106,6 +111,10 @@ func viewLastPerReport(update goTelegram.Update) {
 		text += "No reports found for Last Month"
 	} else {
 		for _, r := range reports {
+			if r.Minute > 60 {
+				r.Hour += r.Minute / 60
+				r.Minute = r.Minute % 60
+			}
 			text += "Date: " + r.Date.Format("January 02, 2006")
 			text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 				"\nBible Studies: %d\n\n", r.Hour, r.Minute, r.Placement, r.Video, r.ReturnVisit, r.BibleStudy)
@@ -154,6 +163,11 @@ func lastMonthTotaled(update goTelegram.Update) {
 			tempReport.ReturnVisit += r.ReturnVisit
 			tempReport.BibleStudy += r.BibleStudy
 		}
+
+		if tempReport.Minute > 60 {
+			tempReport.Hour += tempReport.Minute / 60
+			tempReport.Minute = tempReport.Minute % 60
+		}
 	}
 
 	text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
@@ -196,6 +210,12 @@ func allTotaled(update goTelegram.Update) {
 			tempReport.ReturnVisit += r.ReturnVisit
 			tempReport.BibleStudy += r.BibleStudy
 		}
+
+		if tempReport.Minute > 60 {
+			tempReport.Hour += tempReport.Minute / 60
+			tempReport.Minute = tempReport.Minute % 60
+		}
+
 		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
@@ -247,6 +267,11 @@ func collateSendThisMonth(update goTelegram.Update) {
 			tempReport.ReturnVisit += r.ReturnVisit
 			tempReport.BibleStudy += r.BibleStudy
 		}
+		if tempReport.Minute > 60 {
+			tempReport.Hour += tempReport.Minute / 60
+			tempReport.Minute = tempReport.Minute % 60
+		}
+
 		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
@@ -303,6 +328,11 @@ func collateSendLastMonth(update goTelegram.Update) {
 			tempReport.Video += r.Video
 			tempReport.ReturnVisit += r.ReturnVisit
 			tempReport.BibleStudy += r.BibleStudy
+		}
+
+		if tempReport.Minute > 60 {
+			tempReport.Hour += tempReport.Minute / 60
+			tempReport.Minute = tempReport.Minute % 60
 		}
 		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
