@@ -9,6 +9,7 @@ import (
 )
 
 func handler(update goTelegram.Update) {
+	bot.DeleteKeyboard()
 	switch update.Type {
 	case "text":
 		processText(update)
@@ -34,7 +35,7 @@ func processText(update goTelegram.Update) {
 					}
 					currentUserData.CurrentStage++
 					text := "What do you call your Secretary? (e.g. sir, Bro XYZ)"
-					err = bot.SendMessage(text, update.Message.Chat)
+					currentUserData.Message, err = bot.EditMessage(currentUserData.Message, text)
 					if err != nil {
 						log.Println("can't send message for secretary")
 						log.Println(err)
@@ -48,7 +49,7 @@ func processText(update goTelegram.Update) {
 						log.Println(err)
 					}
 					text := "What is your secretary's WhatsApp number? (include country code; e.g. 2348012345678)"
-					err = bot.SendMessage(text, update.Message.Chat)
+					currentUserData.Message, err = bot.EditMessage(currentUserData.Message, text)
 					if err != nil {
 						log.Println("can't send message for WA number")
 						log.Println(err)
@@ -66,7 +67,7 @@ func processText(update goTelegram.Update) {
 						currentUserData.Data.Name, currentUserData.Data.Secretary, currentUserData.Data.WANumber)
 
 					text += "Send 'OK' to Proceed or 'Bail' to Cancel."
-					err = bot.SendMessage(text, update.Message.Chat)
+					currentUserData.Message, err = bot.EditMessage(currentUserData.Message, text)
 					if err != nil {
 						log.Println("can't edit message for final stage of user")
 						log.Println(err)
@@ -74,11 +75,14 @@ func processText(update goTelegram.Update) {
 				case currentUserData.Stages:
 					if update.Message.Text == "OK" {
 						createUser(currentUserData.Data)
-						delete(userList, update.Message.From.ID)
-						err = bot.SendMessage("You've been registered", update.Message.Chat)
+						_, err = bot.SendMessage("You've been registered", update.Message.Chat)
 						if err != nil {
 							log.Println("Couldn't send registration message.\n", err)
 						}
+					}
+					err = bot.DeleteMessage(currentUserData.Message)
+					if err != nil {
+						log.Println("Couldn't delete message")
 					}
 					delete(userList, update.Message.From.ID)
 					mainMenu(update)
@@ -92,7 +96,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.Hour, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered hours\n", err)
 							mainMenu(update)
@@ -112,7 +116,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.Minute, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered minutes\n", err)
 							mainMenu(update)
@@ -132,7 +136,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.Placement, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered placement\n", err)
 							mainMenu(update)
@@ -152,7 +156,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.Video, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered videos\n", err)
 							mainMenu(update)
@@ -172,7 +176,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.ReturnVisit, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered rv\n", err)
 							mainMenu(update)
@@ -192,7 +196,7 @@ func processText(update goTelegram.Update) {
 					currentReportData.Data.BibleStudy, err = strconv.Atoi(update.Message.Text)
 					if err != nil {
 						log.Println("error in converting to int\n", err)
-						err = bot.SendMessage("Please retry", update.Message.Chat)
+						_, err = bot.SendMessage("Please retry", update.Message.Chat)
 						if err != nil {
 							log.Println("Error when they entered bible studies\n", err)
 							mainMenu(update)
@@ -203,7 +207,7 @@ func processText(update goTelegram.Update) {
 					if err != nil {
 						log.Println("couldn't delete the bible studies sent\n", err)
 					}
-					text := fmt.Sprintf("Please Review.\n\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\n" +
+					text := fmt.Sprintf("Please Review.\n\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\n"+
 						"Return Vists: %d\nBible Studies: %d\n\n", currentReportData.Data.Hour,
 						currentReportData.Data.Minute, currentReportData.Data.Placement, currentReportData.Data.Video,
 						currentReportData.Data.ReturnVisit, currentReportData.Data.BibleStudy)
@@ -243,16 +247,17 @@ func processText(update goTelegram.Update) {
 				UserID: update.Message.From.ID,
 			}
 
+			message, err := bot.SendMessage("Hi! Welcome!\nYou'd need to register to continue.\n\nWhat is your name?",
+				update.Message.Chat)
+
 			newProcessing := userPendingData{
 				Stages:       3,
 				Data:         newUser,
+				Message:      message,
 				CurrentStage: 0,
 			}
 
 			userList[newUser.UserID] = &newProcessing
-
-			err := bot.SendMessage("Hi! Welcome!\nYou'd need to register to continue.\n\nWhat is your name?",
-				update.Message.Chat)
 
 			if err != nil {
 				log.Println("Couldn't send registration message")
@@ -312,10 +317,111 @@ func processCallback(update goTelegram.Update) {
 		if err != nil {
 			log.Println("Couldn't tell that report was recorded", err)
 		}
+		delete(reportList, update.CallbackQuery.From.ID)
 	case "viewReport":
-	case "viewAllReport":
+		text := "View Report"
+		bot.DeleteKeyboard()
+		bot.AddButton("Current Report(Per Entry)", "perEntry")
+		bot.AddButton("Current Report(Totaled)", "monthTotaled")
+		bot.AddButton("Last Report(Per Entry)", "lastPerEntry")
+		bot.AddButton("Last Report(Totaled)", "lastMonthTotaled")
+		bot.AddButton("All Reports(Totaled)", "allTotaled")
+		bot.AddButton("Menu", "main_menu")
+		bot.MakeKeyboard(2)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("Error when displaying view reports page,\n", err)
+		}
+	case "perEntry":
+		viewCurrentPerReport(update)
+	case "monthTotaled":
+		currentMonthTotaled(update)
+	case "lastPerEntry":
+		viewLastPerReport(update)
+	case "lastMonthTotaled":
+		lastMonthTotaled(update)
+	case "allTotaled":
+		allTotaled(update)
+	case "collate":
+		text := "Submit Report"
+		bot.DeleteKeyboard()
+		bot.AddButton("This Month", "submitCurrentReport")
+		bot.AddButton("Last Month", "submitLastReport")
+		bot.AddButton("Menu", "main_menu")
+		bot.MakeKeyboard(2)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("Error when displaying submit report page,\n", err)
+		}
+	case "submitCurrentReport":
+		collateSendThisMonth(update)
 	case "submitLastReport":
-		log.Println("chill")
+		collateSendLastMonth(update)
+	case "delete":
+		text := "This is a Destructive action and would delete all your stored Reports.\n\n" +
+			"Confirm you want to delete all, once deleted, data can't be restored. And I'm not joking.\n\nPress OK to continue"
+
+		bot.DeleteKeyboard()
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("OK", "delete1")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.MakeKeyboard(3)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("stage 1 of delete ish,\n", err)
+		}
+	case "delete1":
+		text := "This is your second warning! And I'm being serious."
+		bot.DeleteKeyboard()
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("OK", "delete2")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.MakeKeyboard(1)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("stage 2 of delete ish,\n", err)
+		}
+	case "delete2":
+		text := "You can't get here by accident. My hands are clean. Please confirm your intention to Delete ALL Records."
+		bot.DeleteKeyboard()
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("OK", "deleteFinal")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.AddButton("Cancel", "main_menu")
+		bot.MakeKeyboard(2)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("stage 1 of delete ish,\n", err)
+		}
+	case "deleteFinal":
+		text := "Done, All deleted."
+		deleteAllReports(update)
+		bot.DeleteKeyboard()
+		bot.AddButton("Menu", "main_menu")
+		bot.MakeKeyboard(1)
+		_, err = bot.EditMessage(update.CallbackQuery.Message, text)
+		if err != nil {
+			log.Println("stage 1 of delete ish,\n", err)
+		}
 	}
 }
 
@@ -324,14 +430,14 @@ func mainMenu(update goTelegram.Update) {
 	bot.DeleteKeyboard()
 	text := fmt.Sprintf("Hi, ")
 	bot.AddButton("Add Report", "addReport")
-	bot.AddButton("View Report(Current Month)", "viewReport")
-	bot.AddButton("View Report(All Records)", "viewAllReport")
-	bot.AddButton("Collate & Send Last Month's Report", "submitLastReport")
-	bot.MakeKeyboard(1)
+	bot.AddButton("View Reports", "viewReport")
+	bot.AddButton("Collate & Send Report", "collate")
+	bot.AddButton("Delete all Records", "delete")
+	bot.MakeKeyboard(2)
 
 	if update.Type == "text" {
 		if update.Message.Chat.Type != "private" {
-			err = bot.SendMessage("Can't use this in a group!", update.Message.Chat)
+			_, err = bot.SendMessage("Can't use this in a group!", update.Message.Chat)
 			if err != nil {
 				log.Print("sending warning message failed\n", err)
 				return
@@ -339,7 +445,7 @@ func mainMenu(update goTelegram.Update) {
 			return
 		}
 		text += update.Message.From.Firstname + "."
-		err = bot.SendMessage(text, update.Message.Chat)
+		_, err = bot.SendMessage(text, update.Message.Chat)
 		if err != nil {
 			log.Println("can't send main menu message,\n", err)
 		}

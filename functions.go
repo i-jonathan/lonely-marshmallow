@@ -8,8 +8,8 @@ import (
 )
 
 func initDatabase() *gorm.DB {
-	databaseConnection := os.Getenv("dsn")
-	db, err := gorm.Open(postgres.Open(databaseConnection), &gorm.Config{})
+	connectionLink := os.Getenv("DATABASE_URL")
+	db, err := gorm.Open(postgres.Open(connectionLink), &gorm.Config{})
 	if err != nil {
 		log.Println("Can't connect to db")
 		log.Fatalln(err)

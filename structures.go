@@ -13,7 +13,7 @@ type user struct {
 }
 
 type report struct {
-	UserID      int  `json:"user_id"`
+	UserID      int `json:"user_id"`
 	Hour        int `json:"hour"`
 	Minute      int `json:"minute"`
 	Placement   int `json:"placement"`
@@ -26,6 +26,7 @@ type report struct {
 type userPendingData struct {
 	Stages       int
 	Data         user
+	Message      goTelegram.Message
 	CurrentStage int
 }
 
