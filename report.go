@@ -275,14 +275,15 @@ func collateSendThisMonth(update goTelegram.Update) {
 		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
+
+		db.Where("user_id = ?", update.CallbackQuery.From.ID).Find(&who)
+		text = fmt.Sprintf("Goodday %s,\n%s", who.Secretary, text)
 		message = "Report to be Sent:\n\n" + text
 		text = strings.ReplaceAll(text, " ", "+")
 		text = strings.ReplaceAll(text, "\n", "%0A")
 
-		db.Where("user_id = ?", update.CallbackQuery.From.ID).Find(&who)
-		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n" +
-			"Goodday %s, " +
-			"https://wa.me/%s/?text=%s", who.Secretary, who.WANumber, text)
+		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n " +
+			"https://wa.me/%s/?text=%s", who.WANumber, text)
 	}
 	bot.DeleteKeyboard()
 	bot.AddButton("Back", "collate")
