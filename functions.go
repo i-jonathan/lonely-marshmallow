@@ -5,6 +5,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
+	"time"
 )
 
 func initDatabase() *gorm.DB {
@@ -23,4 +24,11 @@ func initDatabase() *gorm.DB {
 	}
 
 	return db
+}
+
+func fetchReportBetweenDates(userId int, startDate, endDate time.Time) []report {
+	var reports []report
+	db.Where("user_id = ?", userId).Where("date BETWEEN ? AND ?",
+		startDate, endDate).Find(&reports)
+	return reports
 }

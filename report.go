@@ -9,6 +9,28 @@ import (
 )
 
 func createReport(reportData report) {
+	// if there is no report between the first of the month and the current date, fetch last month report and carry over the minutes to this month
+	var reports []report
+	now := time.Now()
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+
+	monthStart := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+	previousMonthStart := time.Date(currentYear, currentMonth-1, 1, 0, 0, 0, 0, currentLocation)
+	db.Where("user_id = ?", reportData.UserID).Where("date > ?", monthStart).Find(&reports)
+	if len(reports) < 1 {
+		// fetch all reports for last month and total it. Then add the minutes to this month
+		reports = fetchReportBetweenDates(reportData.UserID, previousMonthStart, monthStart)
+		var tempReport report
+		for _, r := range reports {
+			tempReport.Minute += r.Minute
+		}
+		if tempReport.Minute > 60 {
+			tempReport.Minute = tempReport.Minute % 60
+		}
+
+		reportData.Minute += tempReport.Minute
+	}
 	db.Create(reportData)
 }
 
@@ -81,7 +103,7 @@ func currentMonthTotaled(update goTelegram.Update) {
 			tempReport.Hour += tempReport.Minute / 60
 			tempReport.Minute = tempReport.Minute % 60
 		}
-		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
+		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
 	}
@@ -104,8 +126,7 @@ func viewLastPerReport(update goTelegram.Update) {
 
 	monthStart := time.Date(currentYear, currentMonth-1, 1, 0, 0, 0, 0, currentLocation)
 	monthEnd := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-	db.Where("user_id = ?", update.CallbackQuery.From.ID).Where("date BETWEEN ? AND ?",
-		monthStart, monthEnd).Find(&reports)
+	reports = fetchReportBetweenDates(update.CallbackQuery.From.ID, monthStart, monthEnd)
 	var text string
 	if len(reports) < 1 {
 		text += "No reports found for Last Month"
@@ -147,8 +168,7 @@ func lastMonthTotaled(update goTelegram.Update) {
 
 	monthStart := time.Date(currentYear, currentMonth-1, 1, 0, 0, 0, 0, currentLocation)
 	monthEnd := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
-	db.Where("user_id = ?", update.CallbackQuery.From.ID).Where("date BETWEEN ? AND ?",
-		monthStart, monthEnd).Find(&reports)
+	reports = fetchReportBetweenDates(update.CallbackQuery.From.ID, monthStart, monthEnd)
 
 	var text string
 	if len(reports) < 1 {
@@ -170,7 +190,7 @@ func lastMonthTotaled(update goTelegram.Update) {
 		}
 	}
 
-	text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
+	text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 		"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 		tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
 
@@ -216,11 +236,10 @@ func allTotaled(update goTelegram.Update) {
 			tempReport.Minute = tempReport.Minute % 60
 		}
 
-		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
+		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
 	}
-
 
 	bot.DeleteKeyboard()
 	bot.AddButton("Back", "viewReport")
@@ -252,7 +271,7 @@ func collateSendThisMonth(update goTelegram.Update) {
 
 	var (
 		message string
-		text string
+		text    string
 	)
 	if len(reports) < 1 {
 		text += "No reports found for this Month"
@@ -272,7 +291,7 @@ func collateSendThisMonth(update goTelegram.Update) {
 			tempReport.Minute = tempReport.Minute % 60
 		}
 
-		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
+		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
 
@@ -282,7 +301,7 @@ func collateSendThisMonth(update goTelegram.Update) {
 		text = strings.ReplaceAll(text, " ", "+")
 		text = strings.ReplaceAll(text, "\n", "%0A")
 
-		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n " +
+		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n "+
 			"https://wa.me/%s/?text=%s", who.WANumber, text)
 	}
 	bot.DeleteKeyboard()
@@ -335,7 +354,7 @@ func collateSendLastMonth(update goTelegram.Update) {
 			tempReport.Hour += tempReport.Minute / 60
 			tempReport.Minute = tempReport.Minute % 60
 		}
-		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d" +
+		text += fmt.Sprintf("\nHours: %d\nMinutes: %d\nPlacements: %d\nVideos: %d\nReturn Visits: %d"+
 			"\nBible Studies: %d\n\n", tempReport.Hour, tempReport.Minute, tempReport.Placement,
 			tempReport.Video, tempReport.ReturnVisit, tempReport.BibleStudy)
 		message = "Report to be Sent:\n\n" + text
@@ -343,8 +362,8 @@ func collateSendLastMonth(update goTelegram.Update) {
 		text = strings.ReplaceAll(text, "\n", "%0A")
 
 		db.Where("user_id = ?", update.CallbackQuery.From.ID).Find(&who)
-		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n" +
-			"Goodday %s, " +
+		message += fmt.Sprintf("\n\nClick the Link below to send your Report to your Secretary on Whatsapp.\n\n"+
+			"Goodday %s, "+
 			"https://wa.me/%s/?text=%s", who.Secretary, who.WANumber, text)
 	}
 	bot.DeleteKeyboard()

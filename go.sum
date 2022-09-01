@@ -333,12 +333,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/yoruba-codigy/goTelegram v0.0.4-beta h1:LM+4/ab3eWKEMaIfXsx1jf2EltsFpBIWl0HwtW4V/TM=
-github.com/yoruba-codigy/goTelegram v0.0.4-beta/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=
 github.com/yoruba-codigy/goTelegram v0.0.5-beta h1:j9oYth2+vqRwKYrPMItLzpZljIvLuc40OXBtFXlWXiI=
 github.com/yoruba-codigy/goTelegram v0.0.5-beta/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=
-github.com/yoruba-codigy/goTelegram v1.0.2 h1:tOJO86BXQ0jdj4JfiNP6nESdS6u+9j/lgNPunccYNhU=
-github.com/yoruba-codigy/goTelegram v1.0.2/go.mod h1:7zRat7Ztm5vXcPOGR27pRHsaZxGJ6eaPf5mYFpUv8jM=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
